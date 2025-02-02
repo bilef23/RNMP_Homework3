@@ -17,8 +17,8 @@ columns = ["HighBP", "HighChol", "CholCheck", "BMI", "Smoker", "Stroke",
                    "HeartDiseaseorAttack", "PhysActivity", "Fruits", "Veggies",
                    "HvyAlcoholConsump", "AnyHealthcare", "NoDocbcCost", "GenHlth",
                    "MentHlth", "PhysHlth", "DiffWalk", "Sex", "Age", "Education", "Income"]
-#model = RandomForestClassificationModel.load("random_forest_tree")
-#scaler = StandardScalerModel.load("scaler")
+model = RandomForestClassificationModel.load("random_forest_tree")
+scaler = StandardScalerModel.load("scaler")
 
 schema = StructType([StructField(column_name, DoubleType()) for column_name in columns])
 
@@ -37,9 +37,6 @@ health_data_df = kafka_df.selectExpr("CAST(value AS STRING)") \
 
 @pandas_udf(FloatType())
 def predict_udf(*cols):
-    model = RandomForestClassificationModel.load("random_forest_tree")
-    scaler = StandardScalerModel.load("scaler")
-
     input_data = pd.concat(cols, axis=1)
     input_data.columns = columns
     assembler = VectorAssembler(inputCols=columns, outputCol="features")
@@ -61,7 +58,7 @@ query = output_df \
     .format("kafka") \
     .outputMode("append") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("topic", "diabetes_prediction") \
+    .option("topic", "health_data_predicted") \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start()
 
